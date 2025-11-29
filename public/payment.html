@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>EscrowSwap — Payment</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --primary:#4c6ef5;
+    --accent:#9775fa;
+    --muted:#6b7280;
+    --card-bg:#f8f9ff;
+    --accent-2:#4dabf7;
+    --success:#16a34a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:#ffffff;
+    font-family:"Poppins", Arial, sans-serif;
+    color:#111827;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  header{
+    background: linear-gradient(120deg,var(--primary),var(--accent));
+    color:white;
+    text-align:center;
+    padding:28px 18px;
+    position:relative;
+  }
+  header h1{ margin:0; font-size:28px; font-style:italic; font-weight:700; }
+  header p{ margin:6px 0 0; font-size:14px; opacity:0.95; }
+
+  /* Translator */
+  #translator {
+    position:absolute;
+    right:14px;
+    top:12px;
+    background:#fff;
+    padding:6px 10px;
+    border-radius:8px;
+    font-size:13px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.12);
+    z-index:999;
+  }
+
+  .container{
+    width:94%;
+    max-width:980px;
+    margin:22px auto 60px;
+  }
+
+  .panel{
+    background:#fff;
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 8px 24px rgba(15,23,42,0.06);
+    border-left:6px solid var(--primary);
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr 320px;
+    gap:18px;
+    align-items:start;
+  }
+
+  /* Payment form */
+  .form-row{ margin-bottom:12px; text-align:left; }
+  label{ display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+  input[type="text"], input[type="number"], select{
+    width:100%;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid #e6e9ef;
+    font-size:15px;
+  }
+  .note{ font-size:13px; color:var(--muted); margin-top:6px; }
+
+  .cta-row{ display:flex; gap:12px; margin-top:14px; flex-wrap:wrap; }
+  .btn{
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    padding:10px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .btn.secondary{ background:#eef2ff; color:var(--primary); border:1px solid rgba(76,110,245,0.12); }
+  .btn.warn{ background:#f97316; color:#fff; }
+
+  /* Right column: address + QR */
+  .address-box{
+    background:linear-gradient(180deg,#ffffff,#fbfdff);
+    padding:14px;
+    border-radius:10px;
+    text-align:center;
+    border:1px solid #eef4ff;
+  }
+  .qr{
+    width:220px;
+    height:220px;
+    margin:8px auto 10px;
+    display:block;
+  }
+  .addr{
+    word-break:break-all;
+    font-family:monospace;
+    font-size:13px;
+    color:#0f1724;
+    background:#f3f7ff;
+    padding:10px;
+    border-radius:8px;
+    margin-top:10px;
+  }
+  .small{ font-size:12px; color:var(--muted); }
+
+  /* helper toast */
+  .toast{
+    position:fixed;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:24px;
+    background:rgba(15,23,42,0.95);
+    color:#fff;
+    padding:10px 14px;
+    border-radius:999px;
+    display:none;
+    z-index:99999;
+  }
+
+  /* Telegram floating (left) */
+  .telegramFloating{
+    position:fixed;
+    left:18px;
+    bottom:20px;
+    width:64px;
+    height:64px;
+    border-radius:50%;
+    background:#229ED9;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+    box-shadow:0 10px 30px rgba(2,6,23,0.2);
+  }
+  .telegramFloating img{ width:34px; height:34px; }
+
+  /* responsive */
+  @media (max-width:900px){
+    .grid{ grid-template-columns: 1fr; }
+    .qr{ width:180px; height:180px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>EscrowSwap — Payment</h1>
+  <p>Pay the seller’s USDT (TRC-20) to complete the escrow order.</p>
+
+  <div id="translator">
+    <select onchange="translatePage(this.value)">
+      <option value="">🌐 Translate</option>
+      <option value="en">English</option>
+      <option value="fr">Français</option>
+      <option value="sw">Kiswahili</option>
+      <option value="es">Español</option>
+      <option value="ar">العربية</option>
+      <option value="zh">中文</option>
+      <option value="hi">हिन्दी</option>
+    </select>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div>
+        <strong style="font-size:16px;">Pay with USDT (TRC-20)</strong>
+        <div class="small">Send USDT to the address on the right. After sending, paste the TXID and click “Verify on WhatsApp”.</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">Admin address pre-filled</div>
+    </div>
+
+    <div class="grid">
+      <!-- left: form -->
+      <div>
+        <div class="form-row">
+          <label for="orderType">Order Type</label>
+          <select id="orderType">
+            <option value="buy">I am buying USDT (pay with PayPal)</option>
+            <option value="sell">I am selling USDT (receive PayPal)</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="amountUsd">Amount (USD)</label>
+          <input id="amountUsd" type="number" step="0.01" placeholder="Enter USD amount (e.g. 100.00)">
+          <div class="note">If you prefer, enter the USDT amount below instead and leave USD blank.</div>
+        </div>
+
+        <div class="form-row">
+          <label for="amountUsdt">Amount (USDT)</label>
+          <input id="amountUsdt" type="number" step="0.0001" placeholder="Enter USDT amount (e.g. 75.00)">
+        </div>
+
+        <div class="form-row">
+          <label for="payerName">Your name (optional)</label>
+          <input id="payerName" type="text" placeholder="Full name or nickname">
+        </div>
+
+        <div class="form-row">
+          <label for="txid">Transaction ID (TXID) — paste after payment</label>
+          <input id="txid" type="text" placeholder="Paste TRON/TRC-20 TXID here after sending">
+        </div>
+
+        <!-- ⭐ PAYPAL INFORMATION BOX (added here as requested) -->
+        <div class="panel" style="margin-top:20px; border-left:6px solid #4dabf7;">
+          <h3 style="margin:0; font-size:20px; font-weight:700; color:#063271;">
+            Admin is asking for your PayPal information
+          </h3>
+
+          <p style="margin-top:6px; font-size:14px; color:#333;">
+            Provide the PayPal account where funds should be sent.
+          </p>
+
+          <label style="font-weight:600;">PayPal Email</label>
+          <input type="email" id="paypalEmail" placeholder="Enter PayPal email">
+
+          <label style="margin-top:14px; font-weight:600; display:block;">
+            Receive funds as:
+          </label>
+          <select id="paypalMethod">
+            <option value="">Select method</option>
+            <option value="Goods & Services">Goods & Services (Buyer Protection)</option>
+            <option value="Friends & Family">Friends & Family (No protection)</option>
+          </select>
+
+          <button onclick="savePaypalInfo()" class="btn" style="margin-top:16px; width:100%;">
+            Submit PayPal Info
+          </button>
+        </div>
+        <!-- END PAYPAL BOX -->
+
+        <div class="cta-row">
+          <button class="btn" id="copyAddrBtn" onclick="copyAddress()">Copy Address</button>
+          <button class="btn secondary" onclick="showQRFullscreen()">View QR</button>
+          <button class="btn" onclick="markPaidLocal()">I have paid — Submit TXID</button>
+          <button class="btn" style="background:var(--accent);" onclick="verifyWhatsApp()">Verify on WhatsApp</button>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div class="small">After you click "Verify on WhatsApp" your message will open in WhatsApp (web/app). Our admin will confirm manually and release funds when verified.</div>
+        </div>
+
+      </div>
+
+      <!-- right: address + QR -->
+      <aside>
+        <div class="address-box">
+          <div style="font-size:13px;color:var(--muted)">Send TRC-20 USDT to</div>
+
+          <!-- QR -->
+          <img id="qrImg" class="qr" src="" alt="USDT TRC-20 QR">
+
+          <div class="addr" id="usdtAddress">TKp4xouTwVrq17ZDJL5yXrXX2YgSxfvHVq</div>
+
+          <div style="margin-top:10px">
+            <button class="btn secondary" onclick="copyAddress()">Copy address</button>
+          </div>
+
+          <div style="margin-top:10px" class="small">
+            Network: TRON (TRC-20) • Token: USDT
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+</main>
+
+<!-- Telegram floating left -->
+<a class="telegramFloating" href="https://t.me/Jsparks_MY" target="_blank" aria-label="Contact @Jsparks_MY">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="telegram">
+</a>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ====== configuration values from you ======
+  const USDT_ADDRESS = 'TKp4xouTwVrq17ZDJL5yXrXX2YgSxfvHVq';
+  const WHATSAPP_NUMBER = '+254789218146';
+  const WHATSAPP_BASE = 'https://wa.me/';
+
+  // generate QR
+  function setQRCode(){
+    const qr = document.getElementById('qrImg');
+    const payload = encodeURIComponent(USDT_ADDRESS);
+    qr.src = 'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=' + payload + '&chld=L|1';
+  }
+  setQRCode();
+
+  // copy address
+  function copyAddress(){
+    navigator.clipboard?.writeText(USDT_ADDRESS).then(()=>{
+      showToast('Address copied to clipboard');
+    }).catch(()=>{
+      const ta = document.createElement('textarea');
+      ta.value = USDT_ADDRESS;
+      document.body.appendChild(ta);
+      ta.select();
+      try{ document.execCommand('copy'); showToast('Address copied'); }catch(e){ alert('Copy failed'); }
+      ta.remove();
+    });
+  }
+
+  // view QR
+  function showQRFullscreen(){
+    const payload = encodeURIComponent(USDT_ADDRESS);
+    const url = 'https://chart.googleapis.com/chart?chs=600x600&cht=qr&chl=' + payload + '&chld=L|2';
+    window.open(url, '_blank');
+  }
+
+  // toast
+  function showToast(msg, timeout=2200){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    clearTimeout(t._hid);
+    t._hid = setTimeout(()=> t.style.display='none', timeout);
+  }
+
+  function markPaidLocal(){
+    const txid = document.getElementById('txid').value.trim();
+    if(!txid){
+      showToast('Please paste your TXID first');
+      return;
+    }
+    showToast('TXID submitted — admin will verify and release funds');
+  }
+
+  // ⭐ PAYPAL INFO SUBMIT
+  function savePaypalInfo(){
+    const email = document.getElementById("paypalEmail").value.trim();
+    const method = document.getElementById("paypalMethod").value;
+
+    if(email === "" || method === ""){
+        showToast("Fill in all PayPal details");
+        return;
+    }
+
+    showToast("PayPal info submitted");
+  }
+
+  // WhatsApp verification
+  function verifyWhatsApp(){
+    const type = document.getElementById('orderType').value;
+    const usd = (document.getElementById('amountUsd').value||'').trim();
+    const usdt = (document.getElementById('amountUsdt').value||'').trim();
+    const name = (document.getElementById('payerName').value||'').trim();
+    const txid = (document.getElementById('txid').value||'').trim();
+
+    let msg = 'EscrowSwap payment verification%0A';
+    msg += 'Order type: ' + type + '%0A';
+    if(usd) msg += 'Amount (USD): ' + usd + '%0A';
+    if(usdt) msg += 'Amount (USDT): ' + usdt + '%0A';
+    if(name) msg += 'Payer: ' + name + '%0A';
+    if(txid) msg += 'TXID: ' + txid + '%0A';
+    msg += 'Receiver address: ' + USDT_ADDRESS + '%0A';
+
+    const digits = WHATSAPP_NUMBER.replace(/\D/g,'');
+    const waUrl = WHATSAPP_BASE + digits + '?text=' + msg;
+
+    window.open(waUrl, '_blank');
+  }
+
+  function translatePage(lang){
+    if(!lang) return;
+    const url = 'https://translate.google.com/translate?sl=auto&tl=' + lang + '&u=' + window.location.href;
+    window.open(url, '_blank');
+  }
+</script>
+</body>
+</html>

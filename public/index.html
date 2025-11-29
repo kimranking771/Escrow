@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>EscrowSwap</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#4c6ef5;
+    --accent:#9775fa;
+    --card-bg:#f8f9ff;
+    --muted:#777;
+    --accent-2:#4dabf7;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:#ffffff;
+    font-family: "Poppins", Arial, sans-serif;
+    color:#222;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  header{
+    background: linear-gradient(120deg,var(--primary),var(--accent));
+    color:white;
+    text-align:center;
+    padding:44px 18px 80px;
+    position:relative;
+  }
+  header h1{ margin:0; font-size:34px; font-style:italic; font-weight:700; }
+  header p.lead{ margin:8px 0 0; font-size:15px; opacity:0.95; }
+
+  .info-card{
+    width:92%;
+    max-width:980px;
+    margin: 20px auto 18px;
+    background:#fff;
+    padding:26px;
+    border-radius:12px;
+    box-shadow:0 6px 22px rgba(17,24,39,0.06);
+    border-left:6px solid var(--primary);
+    color:#333;
+    font-size:15px;
+    line-height:1.55;
+  }
+
+  .container{ width:92%; max-width:980px; margin: 12px auto 60px; }
+
+  .cta-wrap{ text-align:center; margin-top:10px; margin-bottom:18px; }
+  .btn-main{
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    padding:12px 26px;
+    border-radius:10px;
+    font-size:17px;
+    cursor:pointer;
+    box-shadow:0 8px 18px rgba(76,110,245,0.18);
+  }
+
+  #chooseSection{
+    display:none;
+    margin-top:18px;
+    text-align:center;
+  }
+  .choice-card{
+    background:#f8f9ff;
+    padding:16px;
+    margin:10px auto;
+    width:92%;
+    max-width:420px;
+    border-radius:12px;
+    border-left:6px solid var(--accent);
+    cursor:pointer;
+    font-size:16px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.08);
+  }
+
+  .choice-card:hover{ opacity:0.9;}
+
+  .test-heading{ text-align:center; font-size:24px; margin:30px 0 18px; color:#2b2b2b; font-weight:700; }
+  .test-list{ display:flex; flex-direction:column; gap:14px; margin-bottom:26px; }
+  .test-card{
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+    padding:16px;
+    border-radius:12px;
+    background:var(--card-bg);
+    box-shadow:0 6px 18px rgba(15,23,42,0.04);
+    border-left:6px solid var(--accent-2);
+  }
+  .test-card img{ width:72px; height:72px; border-radius:50%; object-fit:cover; }
+
+  .test-body b{ display:block; margin-bottom:6px; color:#0f1724; font-weight:700; }
+
+  .test-body p{
+    margin:0;
+    color:#2b2b2b;
+    font-size:14px;
+    line-height:1.5;
+    font-style:italic;
+  }
+
+  .test-meta{ margin-top:8px; color:var(--muted); font-size:13px; }
+
+  footer{ background:#f5f7fb; padding:22px 12px; text-align:center; color:#4b5563; font-size:14px; margin-top:20px; }
+  footer a{ color:var(--primary); text-decoration:none; }
+
+  .telegramFloating{
+    position: fixed;
+    left: 18px;
+    bottom: 20px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #229ED9;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+    box-shadow:0 10px 30px rgba(2,6,23,0.2);
+  }
+  .telegramFloating img{ width:34px; height:34px; }
+
+  @media (max-width:480px){
+    header{ padding:36px 12px 90px; }
+    .info-card{ margin:20px auto 18px; padding:18px; }
+  }
+
+  /* Processing overlay */
+  #processingOverlay{
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(255,255,255,0.9);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    font-weight:600;
+    color:#333;
+    z-index:999999;
+  }
+</style>
+</head>
+<body>
+<!-- AUTH BUTTONS -->
+<div class="auth-buttons" style="text-align:right; padding:15px; margin-right:10px;">
+    <a href="login.html"
+       style="background:#ffffff; padding:8px 16px; border-radius:8px;
+       text-decoration:none; font-weight:600; color:#2d49fb; margin-right:8px;
+       border:1px solid #2d49fb;">
+       Login
+    </a>
+
+    <a href="signup.html"
+       style="background:#2d49fb; padding:8px 16px; border-radius:8px;
+       text-decoration:none; font-weight:600; color:white;">
+       Sign Up
+    </a>
+</div>
+
+<header>
+  <h1>EscrowSwap</h1>
+  <p class="lead">Smooth. Secure. Reliable — PayPal ↔ USDT (TRC-20)</p>
+
+  <div class="info-card">
+
+    <div style="font-size:15px; color:#333; margin-top:10px;">
+      <i>EscrowSwap provides an automated, monitored escrow service for exchanging PayPal funds with USDT (TRC-20). Our system helps ensure both parties complete their side of the trade safely.</i>
+    </div>
+
+    <div style="margin-top:14px; font-size:15px; color:#222;">
+      <i><strong>Incomplete transactions:</strong> incomplete transactions guarantee an immediate refund to the sender. A fixed <strong>escrow fee of $2</strong> is charged per transaction — this fee applies whether the transaction completes or is refunded.</i>
+    </div>
+
+    <div style="margin-top:16px; font-size:15px; color:#063271;">
+      <strong>To begin a secure transaction, tap “Create Order” below.</strong>
+    </div>
+
+  </div>
+</header>
+
+
+<main class="container">
+
+  <div class="cta-wrap">
+    <button class="btn-main" onclick="showChoices()">Create Order</button>
+  </div>
+
+  <section id="chooseSection">
+    <div class="choice-card" onclick="processOrder('buy')">I want to buy crypto</div>
+    <div class="choice-card" onclick="processOrder('sell')">I want to sell crypto</div>
+  </section>
+
+  <h2 class="test-heading">What Our Traders Say</h2>
+
+  <section class="test-list">
+
+    <article class="test-card">
+      <img src="https://randomuser.me/api/portraits/men/11.jpg">
+      <div class="test-body">
+        <b>John D.</b>
+        <p>“Very reliable escrow. I used EscrowSwap for a high-value transfer — the process was clear, support responded quickly, and my USDT was released as soon as PayPal funds were confirmed.”</p>
+        <div class="test-meta">Completed 12 trades • Verified buyer</div>
+      </div>
+    </article>
+
+    <article class="test-card">
+      <img src="https://randomuser.me/api/portraits/women/21.jpg">
+      <div class="test-body">
+        <b>Emma B.</b>
+        <p>“Fast delivery and smooth PayPal transfer. The step-by-step instructions made the swap effortless and secure. Highly recommended.”</p>
+        <div class="test-meta">Completed 18 trades • Repeat user</div>
+      </div>
+    </article>
+
+    <article class="test-card">
+      <img src="https://randomuser.me/api/portraits/men/31.jpg">
+      <div class="test-body">
+        <b>Mark H.</b>
+        <p>“Highly recommended for secure crypto swaps. For larger trades I prefer an escrow — EscrowSwap delivered consistent confirmations and quick releases.”</p>
+        <div class="test-meta">Completed 30+ trades • Power user</div>
+      </div>
+    </article>
+
+    <article class="test-card">
+      <img src="https://randomuser.me/api/portraits/women/45.jpg">
+      <div class="test-body">
+        <b>Sarah P.</b>
+        <p>“Safe platform. Escrow always responds — no hidden fees, and refund worked once when the counterparty failed to complete their side.”</p>
+        <div class="test-meta">Completed 5 trades • Verified seller</div>
+      </div>
+    </article>
+
+    <article class="test-card">
+      <img src="https://randomuser.me/api/portraits/men/52.jpg">
+      <div class="test-body">
+        <b>Daniel R.</b>
+        <p>“I trade daily using this site, 5 stars. The interface is simple and the escrow fee is fair for the protection offered.”</p>
+        <div class="test-meta">Completed 20 trades • Trusted trader</div>
+      </div>
+    </article>
+
+  </section>
+
+</main>
+
+<a class="telegramFloating" href="https://t.me/Jsparks_MY" target="_blank">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg">
+</a>
+
+<footer>
+  <div>Phone: <a href="tel:+15013095062">+1 501 309 5062</a></div>
+  <div style="margin-top:6px">Address: 110 Liberty St, New York, USA</div>
+  <div style="margin-top:8px"><a href="terms.html">Terms and Conditions</a></div>
+</footer>
+
+<!-- Processing overlay -->
+<div id="processingOverlay">Processing your request…</div>
+
+<script>
+function showChoices(){
+  document.getElementById("chooseSection").style.display = "block";
+  window.scrollTo({ top: 500, behavior: "smooth" });
+}
+
+/* NEW PROCESSING + REDIRECT */
+function processOrder(type){
+  document.getElementById("processingOverlay").style.display = "flex";
+
+  setTimeout(() => {
+    window.location.href = "payment.html?type=" + type;
+  }, 1200);
+}
+</script>
+
+</body>
+</html>

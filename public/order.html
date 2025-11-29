@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Create Order</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #6a5acd, #00c2ff);
+        height: 100vh;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+    }
+    .container {
+        background: rgba(255,255,255,0.15);
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        width: 85%;
+        max-width: 400px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0px 0px 20px rgba(0,0,0,0.3);
+    }
+    button {
+        width: 100%;
+        background: #ffcc00;
+        border: none;
+        padding: 15px;
+        font-size: 18px;
+        border-radius: 10px;
+        margin-top: 15px;
+        cursor: pointer;
+        transition: 0.3s;
+        font-weight: bold;
+        color: #333;
+    }
+    button:hover {
+        background: #ffe066;
+    }
+    #loading {
+        display: none;
+        font-size: 22px;
+        font-weight: bold;
+        margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Create Escrow Order</h2>
+    <p>Click below to begin the process.</p>
+
+    <button onclick="startLoading()">Create Order</button>
+
+    <div id="loading">⏳ Loading... Please wait</div>
+</div>
+
+<script>
+function startLoading() {
+    document.querySelector("button").style.display = "none";
+    document.getElementById("loading").style.display = "block";
+
+    setTimeout(() => {
+        window.location.href = "select.html";
+    }, 5000);
+}
+</script>
+
+</body>
+</html>

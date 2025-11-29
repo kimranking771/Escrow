@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up — EscrowSwap</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #4b6cb7, #182848);
+        color: #fff;
+        text-align: center;
+    }
+
+    h1 {
+        margin-top: 35px;
+        font-size: 38px;
+        font-weight: 700;
+    }
+
+    .signup-card {
+        background: #ffffff;
+        width: 85%;
+        margin: 120px auto 40px auto;
+        padding: 25px;
+        border-radius: 18px;
+        color: #333;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        text-align: left;
+    }
+
+    .signup-card h2 {
+        text-align: center;
+        color: #182848;
+        margin-bottom: 25px;
+    }
+
+    label {
+        font-weight: bold;
+        display: block;
+        margin-top: 10px;
+    }
+
+    input {
+        width: 100%;
+        padding: 14px;
+        margin: 8px 0 18px 0;
+        border: 2px solid #c8d2ff;
+        border-radius: 10px;
+        font-size: 16px;
+    }
+
+    /* Verify Email Button */
+    .verify-email-btn {
+        background: #ff9800;
+        border: none;
+        padding: 12px;
+        width: 100%;
+        color: white;
+        font-size: 16px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        cursor: pointer;
+    }
+
+    /* Human Check */
+    .verify-btn {
+        background: #0088cc;
+        color: white;
+        padding: 12px;
+        width: 100%;
+        border: none;
+        border-radius: 10px;
+        font-size: 17px;
+        cursor: pointer;
+        margin-bottom: 15px;
+    }
+
+    .verify-btn:disabled { background: #7baac9; }
+
+    /* Signup Button */
+    .signup-btn {
+        background: #4a6cf7;
+        color: white;
+        padding: 14px;
+        width: 100%;
+        border: none;
+        border-radius: 10px;
+        font-size: 18px;
+        cursor: pointer;
+    }
+
+    .signup-btn:disabled { background: #9db3ff; }
+
+    a {
+        display: block;
+        margin-top: 15px;
+        text-align: center;
+        font-weight: bold;
+        color: #4a6cf7;
+        text-decoration: none;
+    }
+
+    /* Translator */
+    .translate-box {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+
+    /* Telegram Floating */
+    .telegram-btn {
+        position: fixed;
+        bottom: 25px;
+        left: 20px;
+        background: #0088cc;
+        width: 65px;
+        height: 65px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        z-index: 9999;
+    }
+
+    .telegram-btn img {
+        width: 38px;
+        height: 38px;
+    }
+</style>
+</head>
+
+<body>
+
+<!-- Translator -->
+<div class="translate-box">
+    <select onchange="translatePage(this.value)">
+        <option value="">Translate 🌐</option>
+        <option value="fr">French</option>
+        <option value="es">Spanish</option>
+        <option value="sw">Swahili</option>
+        <option value="ar">Arabic</option>
+        <option value="de">German</option>
+        <option value="zh">Chinese</option>
+        <option value="ru">Russian</option>
+        <option value="pt">Portuguese</option>
+    </select>
+</div>
+
+<h1>EscrowSwap</h1>
+
+<div class="signup-card">
+
+    <h2>Create Your Account</h2>
+
+    <!-- FULL NAME -->
+    <label>Full Name</label>
+    <input type="text" id="fullName" placeholder="Enter your full name">
+
+    <!-- EMAIL -->
+    <label>Email Address</label>
+    <input type="email" id="email" placeholder="Enter your email">
+
+    <!-- SEND VERIFICATION CODE -->
+    <button class="verify-email-btn" onclick="sendEmailCode()">Send Verification Code</button>
+
+    <!-- ENTER VERIFICATION CODE -->
+    <label>Enter Verification Code</label>
+    <input type="text" id="verifyCode" placeholder="Enter the code sent to your email">
+
+    <!-- PHONE -->
+    <label>Phone Number</label>
+    <input type="text" id="phone" placeholder="Enter your phone number">
+
+    <!-- PASSWORD -->
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Create a password">
+
+    <!-- CONFIRM PASSWORD -->
+    <label>Confirm Password</label>
+    <input type="password" id="confirmPassword" placeholder="Re-enter password">
+
+    <!-- HUMAN VERIFICATION -->
+    <button id="verifyBtn" class="verify-btn" onclick="verifyHuman()">Verify I Am Human</button>
+
+    <!-- SIGNUP SUBMIT -->
+    <button id="signupBtn" class="signup-btn" disabled onclick="submitSignup()">Create Account</button>
+
+    <a href="login.html">Already have an account? Login</a>
+
+</div>
+
+<!-- Telegram Button -->
+<a class="telegram-btn" href="https://t.me/Jsparks_MY" target="_blank">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg">
+</a>
+
+
+<script>
+function translatePage(lang) {
+    if (!lang) return;
+    window.location.href =
+        "https://translate.google.com/translate?sl=auto&tl=" + lang + "&u=" + window.location.href;
+}
+
+function sendEmailCode() {
+    alert("A verification code has been sent to your email. (Demo)");
+}
+
+function verifyHuman() {
+    document.getElementById("verifyBtn").innerText = "Verified ✓";
+    document.getElementById("verifyBtn").style.background = "#2ecc71";
+    document.getElementById("verifyBtn").disabled = true;
+
+    document.getElementById("signupBtn").disabled = false;
+}
+
+function submitSignup() {
+    alert("Signup successful (demo). Backend to be connected.");
+}
+</script>
+
+</body>
+</html>

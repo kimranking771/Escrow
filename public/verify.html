@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Verifying Payment…</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        font-family: Arial, sans-serif;
+        text-align: center;
+        color: white;
+    }
+
+    .container {
+        margin-top: 60px;
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 28px;
+        margin-bottom: 5px;
+    }
+
+    p {
+        font-size: 16px;
+        opacity: 0.9;
+        margin-bottom: 20px;
+    }
+
+    /* Spinner */
+    .loader {
+        border: 6px solid rgba(255,255,255,0.3);
+        border-top: 6px solid #00e676;
+        border-radius: 50%;
+        width: 70px;
+        height: 70px;
+        margin: 25px auto;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .status-box {
+        background: rgba(255,255,255,0.1);
+        padding: 18px;
+        border-radius: 14px;
+        margin: 20px auto;
+        width: 85%;
+        max-width: 420px;
+        font-size: 15px;
+        line-height: 22px;
+    }
+
+    button {
+        margin-top: 30px;
+        padding: 15px 30px;
+        background: #00e676;
+        color: black;
+        font-weight: bold;
+        border: none;
+        border-radius: 12px;
+        font-size: 17px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    button:hover {
+        background: #00ff9d;
+    }
+
+    .note {
+        margin-top: 25px;
+        font-size: 13px;
+        color: #ffe7b2;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Verifying Payment…</h1>
+    <p>Please wait while we confirm your USDT (TRC-20) transfer.</p>
+
+    <div class="loader"></div>
+
+    <div class="status-box">
+        ⏳ <strong>Status:</strong> Waiting for confirmation<br><br>
+        We are checking the blockchain for your transaction.<br>
+        This may take a few seconds.
+    </div>
+
+    <button onclick="window.location.href='success.html'">
+        Continue
+    </button>
+
+    <p class="note">
+        This is a demonstration page. No real USDT transfers are being processed.
+    </p>
+</div>
+
+</body>
+</html>
