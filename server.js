@@ -1,181 +1,75 @@
-/* =========================
-   EscrowSwap — SERVER
-   ========================= */
-
-const express = require("express");
-const path = require("path");
-const bcrypt = require("bcryptjs");
-const session = require("express-session");
-const bodyParser = require("body-parser");
-const Datastore = require("nedb-promises");
-
+const express = require('express');
+const path = require('path');
+const bodyParser = require('body-parser');
+const session = require('express-session');
+const bcrypt = require('bcryptjs');
+const sqlite3 = require('sqlite3').verbose();
 const app = express();
-app.use(bodyParser.json());
-app.use(express.static("public"));
+
+// DATABASE
+const db = new sqlite3.Database('users.db');
+
+// MIDDLEWARE
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(
-    session({
-        secret: "escrowswap_secret_key_2025",
-        resave: false,
-        saveUninitialized: true,
-        cookie: { maxAge: 24 * 60 * 60 * 1000 }
-    })
+  session({
+    secret: "secret-key",
+    resave: false,
+    saveUninitialized: true,
+  })
 );
 
-/* =========================
-   DATABASE SETUP (NeDB)
-   ========================= */
-
-const usersDB = Datastore.create({
-    filename: "./database_users.db",
-    autoload: true
+// HOME PAGE
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'index.html'));
 });
 
-// Create unique index for email
-usersDB.ensureIndex({ fieldName: "email", unique: true });
+// REGISTER
+app.post("/register", (req, res) => {
+  const { username, email, password } = req.body;
 
-/* =========================
-   DEFAULT ADMIN USER
-   ========================= */
+  const hashed = bcrypt.hashSync(password, 10);
 
-async function createAdminUser() {
-    const adminEmail = "lkimtai90@gmail.com";
-    const adminPassword = "@2030Abc";
-
-    const existing = await usersDB.findOne({ email: adminEmail });
-
-    if (existing) {
-        console.log("✔ Admin already exists");
-        return;
+  db.run(
+    "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+    [username, email, hashed],
+    (err) => {
+      if (err) return res.send("Error saving user");
+      res.redirect("/login");
     }
-
-    const hash = bcrypt.hashSync(adminPassword, 10);
-
-    await usersDB.insert({
-        email: adminEmail,
-        password: hash,
-        phone: "0000000000",
-        verified: 1,
-        role: "admin"
-    });
-
-    console.log("✔ Admin created:", adminEmail);
-}
-
-createAdminUser();
-
-/* =========================
-   SIGNUP — Create Account
-   ========================= */
-
-app.post("/signup", async (req, res) => {
-    const { email, password, phone } = req.body;
-
-    if (!email || !password) {
-        return res.json({ success: false, message: "Missing fields." });
-    }
-
-    try {
-        const hash = bcrypt.hashSync(password, 10);
-
-        const user = await usersDB.insert({
-            email,
-            password: hash,
-            phone,
-            verified: 0,
-            role: "user"
-        });
-
-        res.json({ success: true, userId: user._id });
-    } catch (err) {
-        res.json({ success: false, message: "Email already exists." });
-    }
+  );
 });
 
-/* =========================
-   EMAIL VERIFICATION
-   ========================= */
+// LOGIN
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
 
-app.post("/verify-email", async (req, res) => {
-    const { email } = req.body;
+  db.get("SELECT * FROM users WHERE email = ?", [email], (err, user) => {
+    if (!user) return res.send("User not found");
 
-    try {
-        await usersDB.update(
-            { email },
-            { $set: { verified: 1 } }
-        );
+    const valid = bcrypt.compareSync(password, user.password);
+    if (!valid) return res.send("Wrong password");
 
-        res.json({ success: true });
-    } catch {
-        res.json({ success: false });
-    }
+    req.session.user = user;
+    res.redirect("/dashboard");
+  });
 });
 
-/* =========================
-   LOGIN — Check Credentials
-   ========================= */
-
-app.post("/login", async (req, res) => {
-    const { email, password } = req.body;
-
-    try {
-        const user = await usersDB.findOne({ email });
-        if (!user) {
-            return res.json({ success: false, message: "Email not found." });
-        }
-
-        const match = bcrypt.compareSync(password, user.password);
-        if (!match) {
-            return res.json({ success: false, message: "Incorrect password." });
-        }
-
-        req.session.userId = user._id;
-        req.session.role = user.role;
-
-        res.json({ success: true, role: user.role });
-    } catch (err) {
-        return res.json({ success: false, message: "Database error" });
-    }
+// DASHBOARD
+app.get('/dashboard', (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+  res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
 });
 
-/* =========================
-   AUTH MIDDLEWARE
-   ========================= */
-
-function requireLogin(req, res, next) {
-    if (!req.session.userId) {
-        return res.redirect("/login.html");
-    }
-    next();
-}
-
-/* =========================
-   DASHBOARD ROUTES
-   ========================= */
-
-app.get("/dashboard", requireLogin, (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+// LOGIN PAGE
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
 
-app.get("/admin", requireLogin, (req, res) => {
-    if (req.session.role !== "admin") {
-        return res.send("ACCESS DENIED");
-    }
-    res.sendFile(path.join(__dirname, "public", "admin.html"));
-});
-
-/* =========================
-   SERVER START
-   ========================= */
-
-const PORT = 3000;
+// FIX FOR RAILWAY PORT
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log("EscrowSwap server running on port " + PORT);
-});
-/* =========================
-   PAYMENTS DATABASE
-   ========================= */
-const paymentsDB = Datastore.create({
-    filename: "database/payments.db",
-    autoload: true
+  console.log(`Server running on port ${PORT}`);
 });
