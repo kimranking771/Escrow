@@ -1,23 +1,14 @@
-// ==============================
-// IMPORTS
-// ==============================
 const express = require("express");
 const path = require("path");
+const bodyParser = require("body-parser");
 const session = require("express-session");
-const SQLiteStore = require("connect-sqlite3")(session);
 const bcrypt = require("bcryptjs");
 const sqlite3 = require("sqlite3").verbose();
 require("dotenv").config();
 
-// ==============================
-// APP INITIALIZATION
-// ==============================
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
-// ==============================
-// DATABASE SETUP
-// ==============================
 const db = new sqlite3.Database("./database.db", (err) => {
     if (err) {
         console.log("Database connection error:", err);
@@ -26,7 +17,6 @@ const db = new sqlite3.Database("./database.db", (err) => {
     }
 });
 
-// Create users table if missing
 db.run(`
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,45 +26,34 @@ db.run(`
     )
 `);
 
-// ==============================
-// MIDDLEWARE
-// ==============================
-app.use(express.urlencoded({ extended: true }));
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
-// FIXED: Serve static public folder correctly
 app.use(express.static(path.join(__dirname, "public")));
+app.use(bodyParser.urlencoded({ extended: false }));
 
-// FIXED: Persistent session store for production
 app.use(
     session({
-        store: new SQLiteStore({ db: "sessions.db", dir: "./" }),
         secret: "supersecretkey",
         resave: false,
         saveUninitialized: false,
-        cookie: {
-            maxAge: 1000 * 60 * 60 * 24, // 1 day
-        }
+        cookie: { maxAge: 1000 * 60 * 60 * 24 }
     })
 );
 
-// ==============================
-// AUTH MIDDLEWARE
-// ==============================
 function protect(req, res, next) {
-    if (!req.session.user) return res.redirect("/login.html");
+    if (!req.session.user) return res.redirect("/login");
     next();
 }
 
-// ==============================
-// ROUTES
-// ==============================
-
-// Protected home
 app.get("/", protect, (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+    res.render("home", { user: req.session.user });
 });
 
-// Register (POST)
+app.get("/register", (req, res) => {
+    res.render("register");
+});
+
 app.post("/register", (req, res) => {
     const { email, password } = req.body;
 
@@ -84,14 +63,18 @@ app.post("/register", (req, res) => {
         `INSERT INTO users (email, password) VALUES (?, ?)`,
         [email, hashed],
         (err) => {
-            if (err) return res.send("Error: Email already taken");
-
-            res.redirect("/login.html");
+            if (err) {
+                return res.send("Error: Email already taken");
+            }
+            res.redirect("/login");
         }
     );
 });
 
-// Login (POST)
+app.get("/login", (req, res) => {
+    res.render("login");
+});
+
 app.post("/login", (req, res) => {
     const { email, password } = req.body;
 
@@ -106,23 +89,15 @@ app.post("/login", (req, res) => {
     });
 });
 
-// Logout
 app.get("/logout", (req, res) => {
-    req.session.destroy(() => {
-        res.redirect("/login.html");
-    });
+    req.session.destroy();
+    res.redirect("/login");
 });
 
-// ==============================
-// 404 FALLBACK
-// ==============================
 app.use((req, res) => {
     res.status(404).send("404 - Page not found");
 });
 
-// ==============================
-// START SERVER
-// ==============================
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
