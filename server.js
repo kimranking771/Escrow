@@ -3,8 +3,8 @@
 // ==============================
 const express = require("express");
 const path = require("path");
-const bodyParser = require("body-parser");
 const session = require("express-session");
+const SQLiteStore = require("connect-sqlite3")(session);
 const bcrypt = require("bcryptjs");
 const sqlite3 = require("sqlite3").verbose();
 require("dotenv").config();
@@ -13,7 +13,7 @@ require("dotenv").config();
 // APP INITIALIZATION
 // ==============================
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // ==============================
 // DATABASE SETUP
@@ -39,18 +39,21 @@ db.run(`
 // ==============================
 // MIDDLEWARE
 // ==============================
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
+app.use(express.urlencoded({ extended: true }));
 
+// FIXED: Serve static public folder correctly
 app.use(express.static(path.join(__dirname, "public")));
-app.use(bodyParser.urlencoded({ extended: false }));
 
+// FIXED: Persistent session store for production
 app.use(
     session({
+        store: new SQLiteStore({ db: "sessions.db", dir: "./" }),
         secret: "supersecretkey",
         resave: false,
         saveUninitialized: false,
-        cookie: { maxAge: 1000 * 60 * 60 * 24 }
+        cookie: {
+            maxAge: 1000 * 60 * 60 * 24, // 1 day
+        }
     })
 );
 
@@ -58,7 +61,7 @@ app.use(
 // AUTH MIDDLEWARE
 // ==============================
 function protect(req, res, next) {
-    if (!req.session.user) return res.redirect("/login");
+    if (!req.session.user) return res.redirect("/login.html");
     next();
 }
 
@@ -66,14 +69,9 @@ function protect(req, res, next) {
 // ROUTES
 // ==============================
 
-// Home (protected)
+// Protected home
 app.get("/", protect, (req, res) => {
-    res.render("home", { user: req.session.user });
-});
-
-// Register (GET)
-app.get("/register", (req, res) => {
-    res.render("register");
+    res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
 
 // Register (POST)
@@ -86,17 +84,11 @@ app.post("/register", (req, res) => {
         `INSERT INTO users (email, password) VALUES (?, ?)`,
         [email, hashed],
         (err) => {
-            if (err) {
-                return res.send("Error: Email already taken");
-            }
-            res.redirect("/login");
+            if (err) return res.send("Error: Email already taken");
+
+            res.redirect("/login.html");
         }
     );
-});
-
-// Login (GET)
-app.get("/login", (req, res) => {
-    res.render("login");
 });
 
 // Login (POST)
@@ -116,12 +108,13 @@ app.post("/login", (req, res) => {
 
 // Logout
 app.get("/logout", (req, res) => {
-    req.session.destroy();
-    res.redirect("/login");
+    req.session.destroy(() => {
+        res.redirect("/login.html");
+    });
 });
 
 // ==============================
-// 404 PAGE
+// 404 FALLBACK
 // ==============================
 app.use((req, res) => {
     res.status(404).send("404 - Page not found");
