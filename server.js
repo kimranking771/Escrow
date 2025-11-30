@@ -1,3 +1,4 @@
+// server.js
 const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
@@ -11,88 +12,92 @@ const PORT = process.env.PORT || 3000;
 
 // ---------------------- DATABASE ------------------------
 const db = new sqlite3.Database("./database.db", (err) => {
-    if (err) return console.log("Database error:", err);
-    console.log("Connected to SQLite database");
+  if (err) return console.log("Database connection error:", err);
+  console.log("Connected to SQLite database");
 });
 
-db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE,
-        password TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-`);
+db.run(
+  `CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE,
+      password TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+   )`
+);
 
-// ------------------------ VIEW ENGINE -----------------------
+// ---------------------- VIEW ENGINE ---------------------
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-// ------------------------ MIDDLEWARE ------------------------
+// ---------------------- MIDDLEWARE ----------------------
 app.use(express.static(path.join(__dirname, "public")));
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(
-    session({
-        secret: "supersecretkey",
-        resave: false,
-        saveUninitialized: false,
-        cookie: { maxAge: 86400000 } // 1 day
-    })
+  session({
+    secret: process.env.SESSION_SECRET || "supersecretkey",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 86400000 } // 1 day
+  })
 );
 
-// ------------------------ AUTH MIDDLEWARE --------------------
+// ---------------------- AUTH PROTECT ---------------------
 function protect(req, res, next) {
-    if (!req.session.user) return res.redirect("/login");
-    next();
+  if (!req.session.user) return res.redirect("/login");
+  next();
 }
 
-// ------------------------ ROUTES -----------------------------
+// ---------------------- ROUTES ---------------------------
 app.get("/", protect, (req, res) => {
-    res.render("home", { user: req.session.user });
+  res.render("home", { user: req.session.user });
 });
 
-// ----- REGISTER ------
+// REGISTER
 app.get("/register", (req, res) => res.render("register"));
 
 app.post("/register", (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
+  if (!email || !password)
+    return res.status(400).send("Email and password required");
 
-    const hashed = bcrypt.hashSync(password, 10);
+  const hashed = bcrypt.hashSync(password, 10);
 
-    db.run(
-        `INSERT INTO users (email, password) VALUES (?, ?)`,
-        [email, hashed],
-        (err) => {
-            if (err) return res.send("Error: Email already taken");
-            res.redirect("/login");
-        }
-    );
+  db.run(
+    `INSERT INTO users (email, password) VALUES (?, ?)`,
+    [email, hashed],
+    (err) => {
+      if (err) return res.send("Error: Email already taken");
+      res.redirect("/login");
+    }
+  );
 });
 
-// ----- LOGIN ------
+// LOGIN
 app.get("/login", (req, res) => res.render("login"));
 
 app.post("/login", (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
+  if (!email || !password)
+    return res.status(400).send("Email and password required");
 
-    db.get(`SELECT * FROM users WHERE email = ?`, [email], (err, user) => {
-        if (!user) return res.send("User not found");
-        if (!bcrypt.compareSync(password, user.password))
-            return res.send("Incorrect password");
+  db.get(`SELECT * FROM users WHERE email = ?`, [email], (err, user) => {
+    if (!user) return res.send("User not found");
 
-        req.session.user = { id: user.id, email: user.email };
+    if (!bcrypt.compareSync(password, user.password))
+      return res.send("Incorrect password");
 
-        res.redirect("/");
-    });
+    req.session.user = { id: user.id, email: user.email };
+    res.redirect("/");
+  });
 });
 
-// ----- LOGOUT ------
+// LOGOUT
 app.get("/logout", (req, res) => {
-    req.session.destroy(() => res.redirect("/login"));
+  req.session.destroy(() => res.redirect("/login"));
 });
 
-// -------------------- STATIC PAGES --------------------------
+// STATIC VIEW PAGES
 app.get("/dashboard", protect, (req, res) => res.render("dashboard"));
 app.get("/chat", protect, (req, res) => res.render("chat"));
 app.get("/order", protect, (req, res) => res.render("order"));
@@ -105,8 +110,8 @@ app.get("/terms", protect, (req, res) => res.render("terms"));
 app.get("/verify", protect, (req, res) => res.render("verify"));
 app.get("/index", protect, (req, res) => res.render("index"));
 
-// -------------------- 404 HANDLER ---------------------------
+// ---------------------- 404 ----------------------------
 app.use((req, res) => res.status(404).send("404 - Page not found"));
 
-// -------------------- START SERVER --------------------------
+// ---------------------- START --------------------------
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
