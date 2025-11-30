@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EscrowSwap – Dashboard</title>
+
 <style>
     body {
         margin: 0;
@@ -36,7 +37,7 @@
     .sidebar {
         width: 250px;
         background: #1c1c1c;
-        color: rgb(255, 255, 255);
+        color: #fff;
         height: 100vh;
         position: fixed;
         top: 0;
@@ -152,23 +153,23 @@
         <div class="stats-container">
             <div class="stat-box">
                 Total Transactions
-                <div class="stat-number" id="statTransactions">0</div>
+                <div class="stat-number"><%= stats.totalTransactions %></div>
             </div>
             <div class="stat-box">
                 Successful Escrows
-                <div class="stat-number" id="statSuccess">0</div>
+                <div class="stat-number"><%= stats.successEscrows %></div>
             </div>
             <div class="stat-box">
                 Pending Escrows
-                <div class="stat-number" id="statPending">0</div>
+                <div class="stat-number"><%= stats.pendingEscrows %></div>
             </div>
             <div class="stat-box">
                 Total Amount (USD)
-                <div class="stat-number" id="statAmount">$0</div>
+                <div class="stat-number">$<%= stats.totalAmount %></div>
             </div>
         </div>
 
-        <p><b>Welcome back!</b> Here you can track your escrow activities, security logs, notifications, and manage your full account profile.</p>
+        <p><b>Welcome back!</b> Track your escrow activity and account details here.</p>
     </div>
 
     <!-- PROFILE -->
@@ -176,16 +177,16 @@
         <h2>👤 <i>Your Profile</i></h2>
 
         <label>Email</label>
-        <input id="pEmail" disabled>
+        <input value="<%= user.email %>" disabled>
 
         <label>Phone Number</label>
-        <input id="pPhone" disabled>
+        <input value="<%= user.phone %>" disabled>
 
         <label>Verification Status</label>
-        <input id="pVerified" disabled>
+        <input value="<%= user.verified ? 'Verified' : 'Not Verified' %>" disabled>
 
         <label>Account Created</label>
-        <input id="pCreated" disabled>
+        <input value="<%= user.created_at %>" disabled>
     </div>
 
     <!-- SECURITY -->
@@ -193,31 +194,35 @@
         <h2>🔐 <i>Security Center</i></h2>
 
         <h3>Enable 2FA (Coming soon)</h3>
-        <button>Enable</button>
+        <button disabled>Enable</button>
 
         <h3 style="margin-top:25px;">Change Password</h3>
-        <input type="password" placeholder="Old Password">
-        <input type="password" placeholder="New Password">
-        <button>Update Password</button>
+        <form method="POST" action="/change-password">
+            <input type="password" name="oldPassword" placeholder="Old Password" required>
+            <input type="password" name="newPassword" placeholder="New Password" required>
+            <button type="submit">Update Password</button>
+        </form>
     </div>
 
     <!-- NOTIFICATIONS -->
     <div id="notifications" class="section">
         <h2>🔔 <i>Notifications</i></h2>
-        <p>You will see updates and alerts here.</p>
+        <p>No notifications yet.</p>
     </div>
 
     <!-- SETTINGS -->
     <div id="settings" class="section">
         <h2>⚙ <i>Account Settings</i></h2>
 
-        <label>Change Phone Number</label>
-        <input type="text" placeholder="Enter new phone">
+        <form method="POST" action="/update-settings">
+            <label>Change Phone Number</label>
+            <input type="text" name="phone" placeholder="Enter new phone">
 
-        <label>Change Email (Verification Needed)</label>
-        <input type="text" placeholder="Enter new email">
+            <label>Change Email</label>
+            <input type="text" name="email" placeholder="Enter new email">
 
-        <button>Save Changes</button>
+            <button>Save Changes</button>
+        </form>
     </div>
 
 </div>
